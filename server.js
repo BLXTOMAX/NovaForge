@@ -21,13 +21,19 @@ app.use(express.json());
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const emailUser = process.env.EMAIL_USER?.trim() || "";
 const emailPass = process.env.EMAIL_PASS?.replace(/\s+/g, "") || "";
+const smtpHost = process.env.SMTP_HOST?.trim() || "smtp.gmail.com";
+const smtpPort = Number(process.env.SMTP_PORT || 465);
+const smtpSecure =
+  process.env.SMTP_SECURE != null
+    ? process.env.SMTP_SECURE === "true"
+    : smtpPort === 465;
 
 /* ================= EMAIL ================= */
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+  host: smtpHost,
+  port: smtpPort,
+  secure: smtpSecure,
   auth: {
     user: emailUser,
     pass: emailPass,
@@ -35,7 +41,7 @@ const transporter = nodemailer.createTransport({
 });
 
 transporter.verify().then(
-  () => console.log("SMTP ready"),
+  () => console.log(`SMTP ready (${smtpHost}:${smtpPort})`),
   (error) => console.error("SMTP verify error:", error)
 );
 
