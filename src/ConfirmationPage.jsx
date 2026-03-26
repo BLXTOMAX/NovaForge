@@ -28,15 +28,17 @@ export default function ConfirmationPage() {
     const controller = new AbortController();
 
     async function syncOrder() {
-      const raw = localStorage.getItem("nf_order");
-      if (!raw) {
-        setSendError("Aucune commande locale trouvée pour envoyer l'email.");
-        return;
-      }
-
       try {
-        const fallbackOrder = JSON.parse(raw);
         const sessionId = new URLSearchParams(location.search).get("session_id");
+        const raw = localStorage.getItem("nf_order");
+        const fallbackOrder = raw
+          ? JSON.parse(raw)
+          : {
+              pack: "...",
+              email: "...",
+              ref: "...",
+              method: "card",
+            };
 
         let order = {
           pack: fallbackOrder.pack || "...",
@@ -63,15 +65,21 @@ export default function ConfirmationPage() {
           }
         }
 
+        if (
+          (!sessionId && !raw) ||
+          !order.pack ||
+          !order.ref ||
+          order.pack === "..." ||
+          order.ref === "..."
+        ) {
+          setSendError("Commande introuvable pour l'envoi de l'email.");
+          return;
+        }
+
         setPack(order.pack);
         setEmail(order.email);
         setRef(order.ref);
         setMethod(order.method);
-
-        if (!order.pack || !order.ref || order.pack === "..." || order.ref === "...") {
-          setSendError("Commande introuvable pour l'envoi de l'email.");
-          return;
-        }
 
         const sentKey = `nf_order_sent_${order.ref}`;
         if (localStorage.getItem(sentKey)) {
@@ -228,3 +236,4 @@ export default function ConfirmationPage() {
     </div>
   );
 }
+
