@@ -347,7 +347,7 @@ app.post("/order", async (req, res) => {
 /* ================= SUPPORT ================= */
 
 app.post("/support", async (req, res) => {
-  const { name, email, message } = req.body;
+  const { name, email, topic, message } = req.body;
 
   try {
     if (!SUPPORT_DISCORD_WEBHOOK) {
@@ -358,6 +358,10 @@ app.post("/support", async (req, res) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        content: `<@${DISCORD_NOTIFY_USER_ID}>`,
+        allowed_mentions: {
+          users: [DISCORD_NOTIFY_USER_ID],
+        },
         username: "NovaForge Support",
         embeds: [
           {
@@ -367,6 +371,7 @@ app.post("/support", async (req, res) => {
             fields: [
               { name: "Email", value: email || "Non renseigne", inline: true },
               { name: "Nom", value: name || "Support site", inline: true },
+              { name: "Sujet", value: topic || "Autre question", inline: true },
               { name: "Salon", value: `<#${SUPPORT_DISCORD_CHANNEL_ID}>`, inline: true },
               { name: "Source", value: "Formulaire support du site", inline: false },
             ],
@@ -427,6 +432,9 @@ console.log("SERVER FILE OK");
 app.listen(port, () => {
   console.log("Server running on " + port);
 });
+
+
+
 
 
 
