@@ -19,16 +19,25 @@ app.use(cors());
 app.use(express.json());
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const emailUser = process.env.EMAIL_USER?.trim() || "";
+const emailPass = process.env.EMAIL_PASS?.replace(/\s+/g, "") || "";
 
 /* ================= EMAIL ================= */
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: emailUser,
+    pass: emailPass,
   },
 });
+
+transporter.verify().then(
+  () => console.log("SMTP ready"),
+  (error) => console.error("SMTP verify error:", error)
+);
 
 /* ================= DISCORD ================= */
 
@@ -96,11 +105,11 @@ app.post("/create-checkout-session", async (req, res) => {
 
 app.get("/test-mail", async (req, res) => {
   try {
-    console.log("Test mail ->", process.env.EMAIL_USER);
+    console.log("Test mail ->", emailUser);
 
     await transporter.sendMail({
-      from: `"NovaForge" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
+      from: `"NovaForge" <${emailUser}>`,
+      to: emailUser,
       subject: "Test mail NovaForge",
       html: `
         <div style="font-family:Arial,sans-serif;background:#0b1020;padding:32px;color:#ffffff;">
@@ -118,7 +127,7 @@ app.get("/test-mail", async (req, res) => {
     res.send("Mail de test envoyé");
   } catch (err) {
     console.error("Mail test error:", err);
-    res.status(500).send("Erreur mail test");
+    res.status(500).send(`Erreur mail test: ${err.message}`);
   }
 });
 
@@ -177,7 +186,7 @@ app.post("/order", async (req, res) => {
       console.log("Envoi mail confirmation à :", email);
 
       await transporter.sendMail({
-        from: `"NovaForge" <${process.env.EMAIL_USER}>`,
+        from: `"NovaForge" <${emailUser}>`,
         to: email,
         subject: `Confirmation de commande ${ref} - NovaForge`,
         html: `
@@ -330,8 +339,8 @@ app.post("/support", async (req, res) => {
 
   try {
     await transporter.sendMail({
-      from: `"NovaForge" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
+      from: `"NovaForge" <${emailUser}>`,
+      to: emailUser,
       subject: "Support NovaForge",
       html: `
         <h3>Nouveau message</h3>
@@ -387,3 +396,4 @@ console.log("SERVER FILE OK");
 app.listen(port, () => {
   console.log("Server running on " + port);
 });
+
