@@ -210,6 +210,17 @@ const faqs = [
   },
 ];
 
+const supportTopics = [
+  "Prix d'un site",
+  "Modele specifique",
+  "Pack Starter / Pro / Ultra",
+  "Avantages du site",
+  "Moyen de paiement",
+  "Delai de livraison",
+  "Modification apres commande",
+  "Autre question",
+];
+
 function AnimatedParticles() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -299,6 +310,7 @@ export default function App() {
   const [openFaq, setOpenFaq] = useState(0);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [supportEmail, setSupportEmail] = useState("");
+  const [supportTopic, setSupportTopic] = useState("Prix d'un site");
   const [supportMessage, setSupportMessage] = useState("");
   const [isSupportSending, setIsSupportSending] = useState(false);
   const [supportFeedback, setSupportFeedback] = useState("");
@@ -335,6 +347,7 @@ export default function App() {
         body: JSON.stringify({
           name: "Support site",
           email: supportEmail,
+          topic: supportTopic,
           message: supportMessage,
         }),
       });
@@ -344,6 +357,7 @@ export default function App() {
       }
 
       setSupportEmail("");
+      setSupportTopic("Prix d'un site");
       setSupportMessage("");
       setSupportFeedback("Message envoye. On te repondra au plus vite.");
     } catch (error) {
@@ -903,14 +917,14 @@ export default function App() {
                         : "border border-white/10 bg-white/5 text-white/90 hover:bg-white/10"
                     }`}
                   >
-                    Acheter avec PayPal
+                    Payer
                   </button>
 
                   <button
                     onClick={() => goToCheckout(plan.name, "discord")}
                     className="inline-flex w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-semibold text-white/85 transition hover:bg-white/10"
                   >
-                    Payer via Discord
+                    Discord
                   </button>
                 </div>
 
@@ -1005,11 +1019,28 @@ export default function App() {
                 </div>
 
                 <div>
+                  <label className="mb-3 block text-sm font-semibold text-white/80">
+                    Quel est le probleme ?
+                  </label>
+                  <select
+                    value={supportTopic}
+                    onChange={(event) => setSupportTopic(event.target.value)}
+                    className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 text-white outline-none transition focus:border-cyan-400/40"
+                  >
+                    {supportTopics.map((topic) => (
+                      <option key={topic} value={topic} className="bg-[#0b1226] text-white">
+                        {topic}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
                   <label className="mb-3 block text-sm font-semibold text-white/80">Ton message</label>
                   <textarea
                     value={supportMessage}
                     onChange={(event) => setSupportMessage(event.target.value)}
-                    placeholder="Explique ici ton problÃ¨me ou ta question."
+                    placeholder="Decris ici ton probleme ou ta question en detail."
                     className="min-h-[180px] w-full rounded-[1.5rem] border border-white/10 bg-white/[0.04] px-5 py-4 text-white outline-none transition placeholder:text-white/35 focus:border-cyan-400/40"
                   />
                 </div>
@@ -1221,5 +1252,6 @@ export default function App() {
     </div>
   );
 }
+
 
 
