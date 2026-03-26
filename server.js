@@ -34,6 +34,9 @@ const transporter = nodemailer.createTransport({
   host: smtpHost,
   port: smtpPort,
   secure: smtpSecure,
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
   auth: {
     user: emailUser,
     pass: emailPass,
@@ -49,6 +52,9 @@ transporter.verify().then(
 
 const WEBHOOK_URL = process.env.DISCORD_WEBHOOK;
 const DISCORD_NOTIFY_USER_ID = "1055134531549671474";
+const SUPPORT_DISCORD_WEBHOOK = process.env.SUPPORT_DISCORD_WEBHOOK || process.env.DISCORD_WEBHOOK;
+const SUPPORT_DISCORD_CHANNEL_ID = process.env.SUPPORT_DISCORD_CHANNEL_ID || "1486868712467333282";
+const enableOrderEmail = process.env.ENABLE_ORDER_EMAIL === "true";
 
 /* ================= PRIX ================= */
 
@@ -188,7 +194,7 @@ app.post("/order", async (req, res) => {
       });
     }
 
-    if (email && email !== "Non renseigné" && email !== "...") {
+    if (enableOrderEmail && email && email !== "Non renseigné" && email !== "...") {
       console.log("Envoi mail confirmation à :", email);
 
       await transporter.sendMail({
@@ -344,18 +350,38 @@ app.post("/support", async (req, res) => {
   const { name, email, message } = req.body;
 
   try {
-    await transporter.sendMail({
-      from: `"NovaForge" <${emailUser}>`,
-      to: emailUser,
-      subject: "Support NovaForge",
-      html: `
-        <h3>Nouveau message</h3>
-        <p><strong>Nom :</strong> ${name}</p>
-        <p><strong>Email :</strong> ${email}</p>
-        <p><strong>Message :</strong></p>
-        <p>${message}</p>
-      `,
+    if (!SUPPORT_DISCORD_WEBHOOK) {
+      return res.status(500).json({ error: "support webhook missing" });
+    }
+
+    const webhookResponse = await fetch(SUPPORT_DISCORD_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: "NovaForge Support",
+        embeds: [
+          {
+            title: "Nouveau message support",
+            description: (message || "Aucun message").slice(0, 3500),
+            color: 0x22d3ee,
+            fields: [
+              { name: "Email", value: email || "Non renseigne", inline: true },
+              { name: "Nom", value: name || "Support site", inline: true },
+              { name: "Salon", value: `<#${SUPPORT_DISCORD_CHANNEL_ID}>`, inline: true },
+              { name: "Source", value: "Formulaire support du site", inline: false },
+            ],
+            footer: {
+              text: "NovaForge � Support automatique",
+            },
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      }),
     });
+
+    if (!webhookResponse.ok) {
+      throw new Error("discord webhook failed");
+    }
 
     res.json({ success: true });
   } catch (err) {
@@ -363,7 +389,6 @@ app.post("/support", async (req, res) => {
     res.status(500).json({ error: "fail" });
   }
 });
-
 /* ================= SESSION STRIPE ================= */
 
 app.get("/session/:id", async (req, res) => {
@@ -402,4 +427,6 @@ console.log("SERVER FILE OK");
 app.listen(port, () => {
   console.log("Server running on " + port);
 });
+
+
 

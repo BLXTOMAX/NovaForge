@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle2, MessageCircle, ArrowLeft, Sparkles } from "lucide-react";
+import { CheckCircle2, MessageCircle, ArrowLeft, Sparkles, Copy, Check } from "lucide-react";
 
 const apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
 
@@ -23,6 +23,7 @@ export default function ConfirmationPage() {
   const [method, setMethod] = useState("card");
   const [sendError, setSendError] = useState("");
   const [emailSent, setEmailSent] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -72,7 +73,7 @@ export default function ConfirmationPage() {
           order.pack === "..." ||
           order.ref === "..."
         ) {
-          setSendError("Commande introuvable pour l'envoi de l'email.");
+          setSendError("Commande introuvable pour le suivi.");
           return;
         }
 
@@ -97,7 +98,7 @@ export default function ConfirmationPage() {
         });
 
         if (!response.ok) {
-          throw new Error("Le serveur n'a pas pu envoyer l'email de confirmation.");
+          throw new Error("Le serveur n'a pas pu enregistrer la commande.");
         }
 
         localStorage.setItem(sentKey, "true");
@@ -109,7 +110,7 @@ export default function ConfirmationPage() {
         }
 
         console.error("Erreur envoi commande :", err);
-        setSendError(err.message || "Impossible d'envoyer l'email de confirmation.");
+        setSendError(err.message || "Impossible d'enregistrer la commande.");
       }
     }
 
@@ -119,6 +120,20 @@ export default function ConfirmationPage() {
       controller.abort();
     };
   }, [location.search]);
+
+  const copyReference = async () => {
+    if (!ref || ref === "...") {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(ref);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch (error) {
+      console.error("Copy failed:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen overflow-hidden bg-[#050816] text-white">
@@ -174,7 +189,17 @@ export default function ConfirmationPage() {
 
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <div className="text-xs uppercase tracking-[0.2em] text-white/45">Référence</div>
-                <div className="mt-2 text-sm font-semibold text-fuchsia-300">{ref}</div>
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <div className="text-sm font-semibold text-fuchsia-300">{ref}</div>
+                  <button
+                    type="button"
+                    onClick={copyReference}
+                    className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/75 transition hover:bg-white/10 hover:text-white"
+                  >
+                    {copied ? <Check className="h-4 w-4 text-cyan-300" /> : <Copy className="h-4 w-4" />}
+                    {copied ? "Copie" : "Copier"}
+                  </button>
+                </div>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -199,8 +224,8 @@ export default function ConfirmationPage() {
                 </div>
                 <div>
                   3. {emailSent
-                    ? "Un email de confirmation a été envoyé automatiquement."
-                    : "L'email de confirmation est en cours d'envoi."}
+                    ? "La commande a bien ete enregistree."
+                    : "Si besoin, ouvre un ticket Discord avec ta reference."}
                 </div>
                 <div>4. Nous pouvons retrouver rapidement ta commande avec cette référence.</div>
               </div>
@@ -236,4 +261,7 @@ export default function ConfirmationPage() {
     </div>
   );
 }
+
+
+
 
