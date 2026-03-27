@@ -64,9 +64,9 @@ const PRICES = {
 };
 
 const PRODUCT_DESCRIPTIONS = {
-  Starter: "1 page moderne | Responsive | Animations legeres | Livraison 2 a 4 jours",
-  Pro: "Jusqu'a 5 pages | Design premium | Animations avancees | Livraison 3 a 5 jours",
-  Ultra: "Sur devis | Branding complet | Effets premium | Accompagnement dedie",
+  Starter: "1 page moderne | Responsive | Suivi apres livraison si besoin | Livraison 2 a 4 jours",
+  Pro: "Jusqu'a 5 pages | Appels a l'action | Support premium prioritaire | Livraison 3 a 5 jours",
+  Ultra: "Sur devis | Branding complet | Support premium dedie | Accompagnement dedie",
 };
 
 /* ================= STRIPE ================= */
@@ -432,6 +432,7 @@ console.log("SERVER FILE OK");
 app.listen(port, () => {
   console.log("Server running on " + port);
 });
+
 
 
 

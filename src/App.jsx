@@ -90,10 +90,51 @@ const pricing = [
     price: "99€",
     accent: "Réduction d'ouverture",
     features: [
-      "1 page moderne",
-      "Design responsive",
-      "Animations légères",
-      "Structure simple et efficace",
+      {
+        label: "1 page moderne",
+        included: true,
+        note: "Base propre pour lancer rapidement ton projet.",
+      },
+      {
+        label: "Design responsive",
+        included: true,
+        note: "Lecture fluide sur mobile, tablette et desktop.",
+      },
+      {
+        label: "Animations légères",
+        included: true,
+        note: "Rendu moderne sans alourdir la page.",
+      },
+      {
+        label: "Structure simple et efficace",
+        included: true,
+        note: "Idéal pour une présence en ligne claire et rapide.",
+      },
+      {
+        label: "Suivi après livraison si besoin",
+        included: true,
+        note: "Petit ajustement ou réponse rapide après mise en ligne.",
+      },
+      {
+        label: "Identité visuelle premium",
+        included: false,
+        note: "Disponible à partir du pack Pro.",
+      },
+      {
+        label: "Pages supplémentaires / structure business",
+        included: false,
+        note: "Réservé au Pro et au Ultra.",
+      },
+      {
+        label: "Support premium prioritaire",
+        included: false,
+        note: "Priorité de suivi sur les packs supérieurs.",
+      },
+      {
+        label: "Accompagnement branding / concept",
+        included: false,
+        note: "Inclus sur le pack Ultra.",
+      },
     ],
     target: "Idéal pour petit projet / lancement",
     delivery: "2 à 4 jours",
@@ -105,11 +146,51 @@ const pricing = [
     price: "199€",
     accent: "Le plus demandé",
     features: [
-      "Jusqu'à 5 pages",
-      "Identité visuelle premium",
-      "Animations avancées",
-      "Structure optimisée projet / business",
-      "Intégration d'appel à l'action",
+      {
+        label: "Jusqu'à 5 pages",
+        included: true,
+        note: "Plus d'espace pour présenter le projet, les services ou le shop.",
+      },
+      {
+        label: "Identité visuelle premium",
+        included: true,
+        note: "Direction visuelle plus forte pour rassurer et marquer.",
+      },
+      {
+        label: "Animations avancées",
+        included: true,
+        note: "Rendu plus dynamique et plus impactant.",
+      },
+      {
+        label: "Structure optimisée projet / business",
+        included: true,
+        note: "Parcours plus propre pour vendre, convertir ou présenter.",
+      },
+      {
+        label: "Intégration d'appel à l'action",
+        included: true,
+        note: "Boutons et sections pensés pour faire passer à l'action.",
+      },
+      {
+        label: "Suivi après livraison si besoin",
+        included: true,
+        note: "Ajustements rapides et accompagnement plus confortable.",
+      },
+      {
+        label: "Support premium prioritaire",
+        included: true,
+        note: "Demandes traitées en priorité par rapport au Starter.",
+      },
+      {
+        label: "Accompagnement branding / concept complet",
+        included: false,
+        note: "Réservé au pack Ultra.",
+      },
+      {
+        label: "Expérience 100% sur mesure",
+        included: false,
+        note: "Disponible uniquement sur devis avec Ultra.",
+      },
     ],
     target: "Idéal pour business / serveur / shop",
     delivery: "3 à 5 jours",
@@ -121,11 +202,46 @@ const pricing = [
     price: "Sur devis",
     accent: "100% personnalisé",
     features: [
-      "Expérience sur mesure",
-      "Animations poussées",
-      "Effets premium",
-      "Branding complet",
-      "Accompagnement sur le concept",
+      {
+        label: "Expérience 100% sur mesure",
+        included: true,
+        note: "Conçue autour du besoin exact, sans limite de structure standard.",
+      },
+      {
+        label: "Pages / sections selon le besoin",
+        included: true,
+        note: "Architecture libre selon le projet et le niveau d'ambition.",
+      },
+      {
+        label: "Animations poussées et effets premium",
+        included: true,
+        note: "Finitions plus haut de gamme pour un rendu marquant.",
+      },
+      {
+        label: "Branding complet",
+        included: true,
+        note: "Univers visuel plus poussé pour une image de marque forte.",
+      },
+      {
+        label: "Accompagnement sur le concept",
+        included: true,
+        note: "On affine ensemble la direction visuelle et la stratégie.",
+      },
+      {
+        label: "Support premium prioritaire",
+        included: true,
+        note: "Suivi dédié et échanges plus poussés pendant le projet.",
+      },
+      {
+        label: "Suivi dédié après livraison",
+        included: true,
+        note: "Accompagnement plus complet une fois le site en ligne.",
+      },
+      {
+        label: "Optimisation image / conversion / impact",
+        included: true,
+        note: "Pensé pour un projet sérieux qui doit vraiment se distinguer.",
+      },
     ],
     target: "Idéal pour projet sérieux / image forte",
     delivery: "Selon le projet",
@@ -899,11 +1015,46 @@ export default function App() {
 
                 <div className="mt-8 space-y-4">
                   {plan.features.map((feature) => (
-                    <div key={feature} className="flex items-start gap-3 text-sm text-white/75">
-                      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10">
-                        <Check className="h-3.5 w-3.5 text-cyan-300" />
+                    <div
+                      key={feature.label}
+                      className={`rounded-2xl border px-4 py-3 ${
+                        feature.included
+                          ? "border-cyan-400/15 bg-white/[0.04] text-white/80"
+                          : "border-white/8 bg-white/[0.02] text-white/35"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                            feature.included ? "bg-cyan-400/15" : "bg-white/5"
+                          }`}
+                        >
+                          {feature.included ? (
+                            <Check className="h-3.5 w-3.5 text-cyan-300" />
+                          ) : (
+                            <X className="h-3.5 w-3.5 text-white/35" />
+                          )}
+                        </div>
+
+                        <div>
+                          <p
+                            className={`text-sm ${
+                              feature.included
+                                ? "text-white/80"
+                                : "text-white/40 line-through decoration-white/15"
+                            }`}
+                          >
+                            {feature.label}
+                          </p>
+                          <p
+                            className={`mt-1 text-xs ${
+                              feature.included ? "text-cyan-100/60" : "text-white/30"
+                            }`}
+                          >
+                            {feature.note}
+                          </p>
+                        </div>
                       </div>
-                      <span>{feature}</span>
                     </div>
                   ))}
                 </div>
