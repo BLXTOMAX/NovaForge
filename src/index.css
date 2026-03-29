@@ -6,7 +6,12 @@ html {
 
 body {
   margin: 0;
-  background: #050816;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(56, 189, 248, 0.1), transparent 20%),
+    radial-gradient(circle at 84% 8%, rgba(168, 85, 247, 0.12), transparent 24%),
+    radial-gradient(circle at 50% 32%, rgba(29, 78, 216, 0.08), transparent 28%),
+    radial-gradient(circle at 50% 100%, rgba(147, 51, 234, 0.07), transparent 34%),
+    linear-gradient(180deg, #03050d 0%, #060812 30%, #050715 58%, #04050f 100%);
   font-family: Inter, system-ui, sans-serif;
   color: white;
 }

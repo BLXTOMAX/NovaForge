@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 import {
   Globe,
   Layers3,
@@ -408,15 +408,216 @@ function SectionTitle({ badge, title, text }) {
   );
 }
 
-function GlowCard({ children, className = "" }) {
+function GlowCard({ children, className = "", interactive = true, hoverLift = true }) {
+  const rotateX = useMotionValue(0);
+  const rotateY = useMotionValue(0);
+
+  const springRotateX = useSpring(rotateX, { stiffness: 170, damping: 18, mass: 0.7 });
+  const springRotateY = useSpring(rotateY, { stiffness: 170, damping: 18, mass: 0.7 });
+
+  const handleMove = (event) => {
+    if (!interactive) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    rotateY.set(((x - centerX) / centerX) * 6);
+    rotateX.set(-((y - centerY) / centerY) * 6);
+  };
+
+  const handleLeave = () => {
+    rotateX.set(0);
+    rotateY.set(0);
+  };
+
   return (
     <motion.div
-      whileHover={{ y: -6, scale: 1.01 }}
+      whileHover={hoverLift ? { y: -8, scale: 1.012 } : undefined}
       transition={{ duration: 0.25 }}
+      onMouseMove={handleMove}
+      onMouseLeave={handleLeave}
+      style={
+        interactive
+          ? {
+              rotateX: springRotateX,
+              rotateY: springRotateY,
+              transformPerspective: 1100,
+            }
+          : undefined
+      }
       className={`group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/5 backdrop-blur-xl ${className}`}
     >
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(217,70,239,0.14),transparent_35%)]" />
+      {interactive && (
+        <>
+          <div className="pointer-events-none absolute inset-0 rounded-[1.75rem] border border-cyan-300/0 transition duration-300 group-hover:border-cyan-300/80 group-hover:shadow-[0_0_0_1px_rgba(96,165,250,0.34),0_0_28px_rgba(96,165,250,0.2),0_0_54px_rgba(168,85,247,0.18)]" />
+        </>
+      )}
       <div className="relative">{children}</div>
+    </motion.div>
+  );
+}
+
+function PricingCard({ plan, index, goToCheckout }) {
+  const visibleFeatures = plan.features.slice(0, 6);
+  const pulseShadow = plan.popular
+    ? [
+        "0 20px 52px rgba(168,85,247,0.18)",
+        "0 30px 74px rgba(168,85,247,0.34)",
+        "0 20px 52px rgba(168,85,247,0.18)",
+        "0 26px 64px rgba(34,211,238,0.16)",
+        "0 20px 52px rgba(168,85,247,0.18)",
+      ]
+    : [
+        "0 16px 40px rgba(34,211,238,0.08)",
+        "0 24px 56px rgba(99,102,241,0.16)",
+        "0 16px 40px rgba(34,211,238,0.08)",
+        "0 21px 48px rgba(168,85,247,0.1)",
+        "0 16px 40px rgba(34,211,238,0.08)",
+      ];
+
+  return (
+    <motion.div
+      animate={{
+        y: [0, -7, 0, -3, 0],
+        scale: [1, 1.012, 1, 1.006, 1],
+        filter: [
+          "brightness(1)",
+          plan.popular ? "brightness(1.14)" : "brightness(1.08)",
+          "brightness(1)",
+          plan.popular ? "brightness(1.08)" : "brightness(1.04)",
+          "brightness(1)",
+        ],
+        boxShadow: pulseShadow,
+      }}
+      transition={{
+        duration: 5.2,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: index * 0.35,
+      }}
+      className="h-full rounded-[1.75rem] transform-gpu will-change-transform"
+    >
+      <GlowCard
+        interactive={false}
+        hoverLift={false}
+        className={`h-full overflow-hidden p-5 md:p-6 ${
+          plan.popular
+            ? "border-fuchsia-300/54 bg-[linear-gradient(180deg,rgba(205,108,255,0.24),rgba(48,33,86,0.97)_18%,rgba(14,18,40,0.98)_100%)] shadow-2xl shadow-fuchsia-500/18"
+            : "border-cyan-300/16 bg-[linear-gradient(180deg,rgba(33,43,74,0.98),rgba(15,22,45,0.98)_44%,rgba(9,14,33,0.99)_100%)] shadow-[0_18px_44px_rgba(10,18,40,0.38)]"
+        }`}
+      >
+        <div
+          className={`pointer-events-none absolute inset-0 ${
+            plan.popular
+              ? "bg-[radial-gradient(circle_at_82%_14%,rgba(217,70,239,0.2),transparent_24%)]"
+              : "bg-[radial-gradient(circle_at_82%_14%,rgba(56,189,248,0.14),transparent_24%)]"
+          }`}
+        />
+        <div
+          className={`pointer-events-none absolute inset-x-0 top-0 h-36 ${
+            plan.popular
+              ? "bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.16),rgba(255,255,255,0.04)_36%,transparent_72%)]"
+              : "bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.1),rgba(255,255,255,0.03)_36%,transparent_72%)]"
+          } opacity-100`}
+        />
+
+        <div className="relative flex flex-wrap gap-2">
+          <span className="rounded-full border border-white/14 bg-white/[0.07] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/82">
+            {plan.name === "Starter"
+              ? "Pour commencer"
+              : plan.name === "Pro"
+                ? "Le bon équilibre"
+                : "Plus poussé"}
+          </span>
+          {plan.popular && (
+            <span className="rounded-full border border-fuchsia-200/28 bg-fuchsia-300/18 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-fuchsia-50">
+              Le plus demandé
+            </span>
+          )}
+        </div>
+
+        <div className="relative mt-6">
+          <h3 className="text-3xl font-black tracking-tight text-white md:text-[2.2rem]">{plan.name}</h3>
+
+          <div className="mt-3 flex items-end gap-3">
+            <span className="text-4xl font-black leading-none text-white md:text-5xl">{plan.price}</span>
+            {plan.oldPrice !== plan.price && (
+              <span className="pb-1 text-sm text-white/42 line-through">{plan.oldPrice}</span>
+            )}
+          </div>
+
+          <p className="mt-3 max-w-sm text-sm leading-7 text-white/82">
+            {plan.name === "Starter"
+              ? "Une base rapide et propre pour lancer ton projet."
+              : plan.name === "Pro"
+                ? "Le meilleur choix pour un rendu plus fort et plus vendeur."
+                : "Une formule plus libre pour un projet plus ambitieux."}
+          </p>
+
+          <div className="mt-4 space-y-1 text-sm text-white/72">
+            <p>Livraison : {plan.delivery}</p>
+            <p>{plan.target}</p>
+          </div>
+        </div>
+
+        <div className="relative mt-6 space-y-2.5">
+          {visibleFeatures.map((feature) => (
+            <div
+              key={feature.label}
+              className={`rounded-[1.1rem] border px-4 py-3 ${
+                feature.included
+                  ? "border-white/12 bg-white/[0.07]"
+                  : "border-white/10 bg-white/[0.04]"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                    feature.included
+                      ? "bg-emerald-400/18 text-emerald-200"
+                      : "bg-fuchsia-400/16 text-fuchsia-100"
+                  }`}
+                >
+                  {feature.included ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                </div>
+
+                <div>
+                  <p className={`text-sm font-semibold ${feature.included ? "text-white/96" : "text-white/68"}`}>
+                    {feature.label}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="relative mt-6 space-y-3">
+          <button
+            onClick={() => goToCheckout(plan.name, "paypal")}
+            className={`inline-flex w-full items-center justify-center rounded-[1.2rem] px-5 py-3.5 text-sm font-bold transition ${
+              plan.popular
+                ? "bg-gradient-to-r from-cyan-300 via-violet-500 to-fuchsia-400 text-white shadow-[0_20px_40px_rgba(168,85,247,0.34)] hover:shadow-[0_24px_48px_rgba(168,85,247,0.4)]"
+                : "border border-white/12 bg-white/[0.08] text-white hover:bg-white/[0.11]"
+            }`}
+          >
+            Choisir {plan.name}
+          </button>
+
+          <button
+            onClick={() => goToCheckout(plan.name, "discord")}
+            className="inline-flex w-full items-center justify-center rounded-[1.2rem] border border-white/12 bg-white/[0.05] px-5 py-3.5 text-sm font-semibold text-white/88 transition hover:border-cyan-400/20 hover:bg-white/[0.08]"
+          >
+            Discuter sur Discord
+          </button>
+        </div>
+
+        <p className="relative mt-3 text-[11px] text-white/52">
+          Paiement sécurisé via PayPal ou Discord
+        </p>
+      </GlowCard>
     </motion.div>
   );
 }
@@ -498,85 +699,103 @@ export default function App() {
   return (
     <div
       id="top"
-      className="min-h-screen overflow-hidden bg-[#050816] text-white selection:bg-fuchsia-500/30 selection:text-white"
+      className="min-h-screen overflow-hidden bg-transparent text-white selection:bg-fuchsia-500/30 selection:text-white"
     >
       <div className="relative">
         <AnimatedParticles />
 
-        <div className="relative z-20 border-b border-cyan-400/10 bg-gradient-to-r from-cyan-500/10 via-fuchsia-500/10 to-violet-500/10 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-6 py-2 text-center text-xs font-medium text-cyan-200 lg:px-8">
-            <Rocket className="h-4 w-4" />
-            Offre d'ouverture : prix réduits sur les formules Starter et Pro pour le lancement du site.
+        <div className="fixed inset-x-0 top-0 z-50">
+          <div className="mx-auto max-w-7xl px-4 pt-3 lg:px-6">
+            <header className="rounded-[1.85rem] border border-white/10 bg-[#080b15]/90 shadow-[0_24px_60px_rgba(0,0,0,0.34)] backdrop-blur-2xl">
+              <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 lg:px-6">
+                <a href="#top" className="flex items-center gap-3">
+                  <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/12 bg-[linear-gradient(135deg,rgba(34,211,238,0.18),rgba(124,58,237,0.32)_55%,rgba(217,70,239,0.24))] shadow-[0_12px_28px_rgba(124,58,237,0.24)]">
+                    <div className="absolute inset-[1px] rounded-[0.95rem] bg-[linear-gradient(180deg,rgba(11,16,32,0.96),rgba(18,11,34,0.92))]" />
+                    <div className="absolute h-6 w-6 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.24),rgba(255,255,255,0.02)_68%,transparent_74%)] blur-[2px]" />
+                    <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(135deg,rgba(56,189,248,0.92),rgba(139,92,246,0.92)_55%,rgba(217,70,239,0.88))] text-white shadow-[0_6px_18px_rgba(56,189,248,0.2)]">
+                      <Globe className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-semibold tracking-wide text-white">NovaForge</div>
+                    <div className="text-xs text-white/45">Sites premium modernes & animés</div>
+                  </div>
+                </a>
+
+                <nav className="hidden items-center gap-2 md:flex">
+                  {navItems.map((item) => (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      className="rounded-2xl px-4 py-3 text-sm font-medium text-white/68 transition hover:bg-white/[0.05] hover:text-white"
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                </nav>
+
+                <div className="hidden items-center gap-3 md:flex">
+                  <a
+                    href="https://discord.gg/vg9X5n6gyh"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center rounded-2xl border border-white/14 bg-white/[0.03] px-5 py-3 text-sm font-semibold text-white/92 shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:bg-white/[0.07]"
+                  >
+                    Connexion
+                  </a>
+                  <a
+                    href="#pricing"
+                    className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-cyan-400 via-violet-500 to-fuchsia-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(124,58,237,0.3)] transition hover:scale-[1.02]"
+                  >
+                    Commander
+                  </a>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((prev) => !prev)}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 md:hidden"
+                >
+                  {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </button>
+              </div>
+
+              {menuOpen && (
+                <div className="border-t border-white/10 bg-[#080b15]/95 px-5 py-4 backdrop-blur-2xl md:hidden">
+                  <div className="flex flex-col gap-3">
+                    {navItems.map((item) => (
+                      <a
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMenuOpen(false)}
+                        className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/82"
+                      >
+                        {item.label}
+                      </a>
+                    ))}
+                    <a
+                      href="https://discord.gg/vg9X5n6gyh"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-xl border border-white/12 bg-white/[0.03] px-4 py-3 text-center text-sm font-semibold text-white/90"
+                    >
+                      Connexion
+                    </a>
+                    <a
+                      href="#pricing"
+                      onClick={() => setMenuOpen(false)}
+                      className="rounded-xl bg-gradient-to-r from-cyan-400 via-violet-500 to-fuchsia-500 px-4 py-3 text-center text-sm font-semibold text-white"
+                    >
+                      Commander
+                    </a>
+                  </div>
+                </div>
+              )}
+            </header>
           </div>
         </div>
 
-        <header className="sticky top-0 z-30 border-b border-white/10 bg-black/20 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-8">
-            <a href="#top" className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-violet-500 to-fuchsia-500 shadow-lg shadow-fuchsia-500/20">
-                <Globe className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-lg font-semibold tracking-wide">NovaForge</div>
-                <div className="text-xs text-white/45">Sites premium modernes & animés</div>
-              </div>
-            </a>
-
-            <nav className="hidden items-center gap-8 text-sm text-white/70 md:flex">
-              {navItems.map((item) => (
-                <a key={item.href} href={item.href} className="transition hover:text-white">
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-
-            <div className="hidden md:block">
-              <a
-                href="https://discord.gg/vg9X5n6gyh"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/85 transition hover:bg-white/10"
-              >
-                Rejoindre Discord
-              </a>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setMenuOpen((prev) => !prev)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 md:hidden"
-            >
-              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
-
-          {menuOpen && (
-            <div className="border-t border-white/10 bg-black/40 px-6 py-4 backdrop-blur-xl md:hidden">
-              <div className="flex flex-col gap-3">
-                {navItems.map((item) => (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMenuOpen(false)}
-                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80"
-                  >
-                    {item.label}
-                  </a>
-                ))}
-                <a
-                  href="https://discord.gg/vg9X5n6gyh"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-xl bg-gradient-to-r from-cyan-400 via-violet-500 to-fuchsia-500 px-4 py-3 text-center text-sm font-semibold text-white"
-                >
-                  Rejoindre Discord
-                </a>
-              </div>
-            </div>
-          )}
-        </header>
-
-        <section className="relative z-10 mx-auto max-w-7xl px-6 pb-24 pt-20 lg:px-8 lg:pb-32 lg:pt-28">
+        <section className="relative z-10 mx-auto max-w-7xl px-6 pb-24 pt-44 lg:px-8 lg:pb-32 lg:pt-48">
           <div className="grid items-center gap-14 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
               <motion.div
@@ -972,116 +1191,13 @@ export default function App() {
           text="Pour l'ouverture du site, les offres Starter et Pro sont disponibles à tarif réduit. C'est le bon moment pour lancer ton projet avec un design premium à meilleur prix."
         />
 
-        <div className="mb-8 rounded-[1.75rem] border border-fuchsia-400/20 bg-gradient-to-r from-fuchsia-500/10 via-violet-500/10 to-cyan-500/10 p-5 text-center text-sm text-white/80 backdrop-blur-xl">
+        <div className="mb-8 rounded-[1.75rem] border border-fuchsia-300/30 bg-gradient-to-r from-fuchsia-500/16 via-violet-500/14 to-cyan-400/16 p-5 text-center text-sm text-white/92 shadow-[0_10px_40px_rgba(99,102,241,0.18)] backdrop-blur-xl">
           Offre d'ouverture active : au lieu du tarif classique, tu profites du prix réduit affiché ci-dessous.
         </div>
 
         <div className="grid gap-6 xl:grid-cols-3">
           {pricing.map((plan, i) => (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.55, delay: i * 0.08 }}
-              className="h-full"
-            >
-              <GlowCard
-                className={`h-full p-8 ${
-                  plan.popular
-                    ? "border-fuchsia-400/40 bg-gradient-to-b from-fuchsia-500/10 to-cyan-500/10 shadow-2xl shadow-fuchsia-500/10"
-                    : ""
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute right-6 top-6 rounded-full border border-fuchsia-300/20 bg-fuchsia-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-fuchsia-200">
-                    Populaire
-                  </div>
-                )}
-
-                <div className="text-sm uppercase tracking-[0.25em] text-cyan-300">{plan.accent}</div>
-                <h3 className="mt-4 text-3xl font-bold text-white">{plan.name}</h3>
-
-                <div className="mt-4 flex items-end gap-3">
-                  {plan.oldPrice !== plan.price && (
-                    <span className="text-lg text-white/35 line-through">{plan.oldPrice}</span>
-                  )}
-                  <span className="text-4xl font-black text-white">{plan.price}</span>
-                </div>
-
-                <p className="mt-2 text-xs text-cyan-300">⚠️ Prix de lancement (limité)</p>
-                <p className="mt-1 text-xs text-white/50">⏱ Livraison : {plan.delivery}</p>
-                <p className="mt-3 text-sm text-fuchsia-200">{plan.target}</p>
-
-                <div className="mt-8 space-y-4">
-                  {plan.features.map((feature) => (
-                    <div
-                      key={feature.label}
-                      className={`rounded-2xl border px-4 py-3 ${
-                        feature.included
-                          ? "border-cyan-400/15 bg-white/[0.04] text-white/80"
-                          : "border-white/8 bg-white/[0.02] text-white/35"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-                            feature.included ? "bg-cyan-400/15" : "bg-white/5"
-                          }`}
-                        >
-                          {feature.included ? (
-                            <Check className="h-3.5 w-3.5 text-cyan-300" />
-                          ) : (
-                            <X className="h-3.5 w-3.5 text-white/35" />
-                          )}
-                        </div>
-
-                        <div>
-                          <p
-                            className={`text-sm ${
-                              feature.included
-                                ? "text-white/80"
-                                : "text-white/40 line-through decoration-white/15"
-                            }`}
-                          >
-                            {feature.label}
-                          </p>
-                          <p
-                            className={`mt-1 text-xs ${
-                              feature.included ? "text-cyan-100/60" : "text-white/30"
-                            }`}
-                          >
-                            {feature.note}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-8 flex flex-col gap-3">
-                  <button
-                    onClick={() => goToCheckout(plan.name, "paypal")}
-                    className={`inline-flex w-full items-center justify-center rounded-2xl px-5 py-4 text-sm font-semibold transition ${
-                      plan.popular
-                        ? "bg-gradient-to-r from-cyan-400 via-violet-500 to-fuchsia-500 text-white hover:scale-[1.02]"
-                        : "border border-white/10 bg-white/5 text-white/90 hover:bg-white/10"
-                    }`}
-                  >
-                    Payer
-                  </button>
-
-                  <button
-                    onClick={() => goToCheckout(plan.name, "discord")}
-                    className="inline-flex w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-semibold text-white/85 transition hover:bg-white/10"
-                  >
-                    Discord
-                  </button>
-                </div>
-
-                <p className="mt-4 text-xs text-white/40">Paiement sécurisé via PayPal ou Discord</p>
-              </GlowCard>
-            </motion.div>
+            <PricingCard key={plan.name} plan={plan} index={i} goToCheckout={goToCheckout} />
           ))}
         </div>
       </section>
@@ -1126,7 +1242,7 @@ export default function App() {
 
               <p className="mt-5 max-w-xl text-base leading-8 text-white/68">
                 Envoie directement ton message depuis le site avec ton email, ou utilise le
-                support Discord si tu veux une rÃ©ponse plus rapide.
+                support Discord si tu veux une réponse plus rapide.
               </p>
 
               <div className="mt-8 space-y-4">
@@ -1140,7 +1256,7 @@ export default function App() {
                 <div className="rounded-[1.5rem] border border-fuchsia-400/15 bg-fuchsia-500/[0.08] p-5">
                   <div className="text-sm font-semibold text-fuchsia-100">Support Discord</div>
                   <p className="mt-2 text-sm leading-7 text-white/65">
-                    Ouvre directement le salon support si tu prÃ©fÃ¨res un canal interne.
+                    Ouvre directement le salon support si tu préfères un canal interne.
                   </p>
                 </div>
               </div>
@@ -1403,6 +1519,3 @@ export default function App() {
     </div>
   );
 }
-
-
-
